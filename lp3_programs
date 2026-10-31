@@ -1,1 +1,306 @@
+# DAA-1: Fibonacci Series
+# Recursive and Non-Recursive Methods
+
+# Recursive Function
+def fibonacci_recursive(n):
+    if n <= 1:
+        return n
+    return fibonacci_recursive(n - 1) + fibonacci_recursive(n - 2)
+
+
+# Non-Recursive Function
+def fibonacci_non_recursive(n):
+    a, b = 0, 1
+    series = []
+
+    for i in range(n):
+        series.append(a)
+        a, b = b, a + b
+
+    return series
+
+
+# Main Program
+n = int(input("Enter the number of terms: "))
+
+if n < 0:
+    print("Please enter a non-negative number.")
+
+else:
+    # Recursive Method
+    print("\nFibonacci Series using Recursion:")
+    for i in range(n):
+        print(fibonacci_recursive(i), end=" ")
+
+    # Non-Recursive Method
+    print("\n\nFibonacci Series without Recursion:")
+    result = fibonacci_non_recursive(n)
+
+    for num in result:
+        print(num, end=" ")
+
+    print()
+
+# DAA-2: Job Sequencing with Deadlines
+# Using Greedy Algorithm
+
+def job_sequencing(jobs):
+
+    # Sort jobs in descending order of profit
+    jobs.sort(key=lambda x: x[2], reverse=True)
+
+    # Find maximum deadline
+    max_deadline = max(job[1] for job in jobs)
+
+    # Create empty time slots
+    slots = [None] * max_deadline
+
+    total_profit = 0
+
+    # Schedule jobs
+    for job in jobs:
+        job_id, deadline, profit = job
+
+        # Find the latest available slot
+        for j in range(min(deadline, max_deadline) - 1, -1, -1):
+
+            if slots[j] is None:
+                slots[j] = job_id
+                total_profit += profit
+                break
+
+    # Display scheduled jobs
+    print("\nScheduled Jobs:")
+    for i in range(max_deadline):
+        if slots[i] is not None:
+            print("Time Slot", i + 1, ":", slots[i])
+
+    print("\nMaximum Profit:", total_profit)
+
+
+# Main Program
+n = int(input("Enter the number of jobs: "))
+
+jobs = []
+
+for i in range(n):
+    print("\nEnter details for Job", i + 1)
+
+    job_id = input("Enter Job ID: ")
+    deadline = int(input("Enter Deadline: "))
+    profit = int(input("Enter Profit: "))
+
+    jobs.append((job_id, deadline, profit))
+
+job_sequencing(jobs)
+
+# DAA-3: Huffman Encoding
+# Using Greedy Algorithm
+
+import heapq
+
+
+# Node class for Huffman Tree
+class Node:
+    def __init__(self, char, freq):
+        self.char = char
+        self.freq = freq
+        self.left = None
+        self.right = None
+
+    # Compare nodes based on frequency
+    def __lt__(self, other):
+        return self.freq < other.freq
+
+
+# Generate Huffman Codes
+def generate_codes(root, code, huffman_codes):
+
+    if root is None:
+        return
+
+    # If leaf node, store the code
+    if root.char is not None:
+        huffman_codes[root.char] = code if code else "0"
+        return
+
+    # Traverse left and right
+    generate_codes(root.left, code + "0", huffman_codes)
+    generate_codes(root.right, code + "1", huffman_codes)
+
+
+# Main Huffman Encoding Function
+def huffman_encoding(characters, frequencies):
+
+    heap = []
+
+    # Create leaf nodes
+    for char, freq in zip(characters, frequencies):
+        heapq.heappush(heap, Node(char, freq))
+
+    # Build Huffman Tree
+    while len(heap) > 1:
+
+        left = heapq.heappop(heap)
+        right = heapq.heappop(heap)
+
+        # Combine two minimum frequency nodes
+        merged = Node(None, left.freq + right.freq)
+
+        merged.left = left
+        merged.right = right
+
+        heapq.heappush(heap, merged)
+
+    # Generate Huffman Codes
+    root = heap[0]
+
+    huffman_codes = {}
+
+    generate_codes(root, "", huffman_codes)
+
+    return huffman_codes
+
+
+# Main Program
+n = int(input("Enter number of characters: "))
+
+characters = []
+frequencies = []
+
+for i in range(n):
+
+    char = input("Enter character: ")
+    freq = int(input("Enter frequency: "))
+
+    characters.append(char)
+    frequencies.append(freq)
+
+
+# Generate Huffman Codes
+codes = huffman_encoding(characters, frequencies)
+
+print("\nHuffman Codes:")
+
+for char, code in codes.items():
+    print(char, ":", code)
+
+# DAA-4: Fractional Knapsack
+# Using Greedy Algorithm
+
+def fractional_knapsack(capacity, items):
+
+    # Sort items by value/weight ratio in descending order
+    items.sort(key=lambda x: x[1] / x[0], reverse=True)
+
+    total_value = 0
+
+    print("\nSelected Items:")
+
+    for weight, value in items:
+
+        if capacity == 0:
+            break
+
+        # If complete item can fit
+        if weight <= capacity:
+
+            capacity -= weight
+            total_value += value
+
+            print("Taken full item:",
+                  "Weight =", weight,
+                  "Value =", value)
+
+        # If only a fraction can fit
+        else:
+
+            fraction = capacity / weight
+
+            total_value += value * fraction
+
+            print("Taken fraction:",
+                  round(fraction, 2),
+                  "of item with weight", weight)
+
+            capacity = 0
+
+    print("\nMaximum Knapsack Value:", total_value)
+
+
+# Main Program
+n = int(input("Enter number of items: "))
+
+items = []
+
+for i in range(n):
+
+    print("\nEnter details for Item", i + 1)
+
+    weight = float(input("Enter weight: "))
+    value = float(input("Enter value: "))
+
+    if weight <= 0:
+        print("Weight must be greater than zero.")
+        exit()
+
+    items.append((weight, value))
+
+
+capacity = float(input("\nEnter knapsack capacity: "))
+
+if capacity < 0:
+    print("Capacity cannot be negative.")
+else:
+    fractional_knapsack(capacity, items)
+
+# DAA-5: 0/1 Knapsack Problem using Dynamic Programming
+
+def knapsack(weights, values, capacity):
+    n = len(weights)
+
+    # Create a DP table with (n+1) rows and (capacity+1) columns
+    dp = [[0 for _ in range(capacity + 1)] for _ in range(n + 1)]
+
+    # Fill the DP table
+    for i in range(1, n + 1):
+        for w in range(capacity + 1):
+
+            # If the current item's weight is less than or equal to capacity
+            if weights[i - 1] <= w:
+
+                # Maximum of including or excluding the item
+                include = values[i - 1] + dp[i - 1][w - weights[i - 1]]
+                exclude = dp[i - 1][w]
+
+                dp[i][w] = max(include, exclude)
+
+            else:
+                # Cannot include the current item
+                dp[i][w] = dp[i - 1][w]
+
+    return dp[n][capacity]
+
+
+# Main program
+n = int(input("Enter number of items: "))
+
+weights = []
+values = []
+
+for i in range(n):
+    weight = int(input(f"Enter weight of item {i + 1}: "))
+    value = int(input(f"Enter value of item {i + 1}: "))
+
+    weights.append(weight)
+    values.append(value)
+
+capacity = int(input("Enter knapsack capacity: "))
+
+if capacity < 0 or any(weight <= 0 for weight in weights):
+    print("Please enter a non-negative capacity and positive item weights.")
+else:
+    maximum_value = knapsack(weights, values, capacity)
+
+    print("\nMaximum value in Knapsack:", maximum_value)
 
