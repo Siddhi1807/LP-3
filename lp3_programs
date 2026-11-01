@@ -1409,3 +1409,87 @@ print("Minimum y:", round(function(x), 8))
 
 print("-----------------------------------")
 
+# ========================================================================
+# BC-1: Install Metamask and Study Spending of Ether per Transaction
+# ========================================================================
+
+# Aim: To install the Metamask wallet, connect it to an Ethereum test network, and study how much Ether is spent (gas fee) in each transaction.
+Procedure
+1. Open the official site metamask.io and click Download; add the extension to your browser and pin it.
+2. Click Create a new wallet, agree to the terms and set a strong password.
+3. Write the 12-word Secret Recovery Phrase on paper, confirm it when asked and keep it offline. Never share or screenshot it.
+4. Open the network drop-down at the top and enable Show test networks (Settings > Advanced). Select Sepolia.
+5. Copy your account address (starts with 0x) and request free test ETH from a Sepolia faucet (for example Google Cloud Web3 faucet or Alchemy faucet). Wait until the balance appears.
+6. Click Send, paste a second address (or another of your own accounts), enter 0.001 ETH.
+7. Before confirming, click the gas/Edit option. Note the estimated gas fee, gas limit, max base fee and priority fee.
+8. Repeat the transaction with the three speed options (Low / Market / Aggressive) and record the fee for each.
+9. After confirmation open Activity > the transaction > View on block explorer. Record the transaction hash, block number, gas used, gas price and transaction fee.
+10. Compare the fee for each speed and calculate: fee = gas used x gas price.
+
+# ========================================================================
+# BC-2: Create Your Own Wallet Using Metamask for Crypto Transactions
+# ========================================================================
+
+# Aim: To create and manage a personal wallet using Metamask, create multiple accounts and carry out crypto transactions between them.
+Procedure 
+1. Open Metamask and confirm you are on the Sepolia network. 
+2. Rename Account 1 to something meaningful (for example Wallet-A) from the account options. 
+3. Click the account icon > Add account and create Account 2 (Wallet-B). Both accounts come from the same seed phrase. 
+4. Copy the address of Wallet-B (click the address to copy). Verify the first and last 4 characters before pasting. 
+5. From Wallet-A click Send, paste the Wallet-B address, enter an amount (example 0.01 ETH), review the gas fee and click Confirm. 
+6. Wait for the status to change from Pending to Confirmed in the Activity tab. 
+7. Open the transaction on Etherscan and note: Transaction Hash, Status, Block, From, To, Value, Transaction Fee. 
+8. Switch to Wallet-B and verify the received balance. Optionally send a part of it back to Wallet-A. 
+9. (Optional) Import an account using a private key or use Account details > Show private key to understand key export, then delete the imported test account. 
+10. (Optional) Click Receive to show the QR code of your address.
+
+# ========================================================================
+# BC-3: Smart Contract for a Customer's Bank Account
+# ========================================================================
+
+# Procedure(Remix + Metamask + Sepolia):
+1. Open remix.ethereum.org, create the file BankAccount.sol in the contracts folder and paste the program. 
+2. Go to the Solidity Compiler tab, choose version 0.8.20 (or higher 0.8.x) and click Compile. A green tick means success. 
+3. Open Deploy and Run Transactions. Set Environment to Injected Provider - MetaMask. Metamask asks to connect; select your account on Sepolia. 
+4. Select the contract BankAccount and click Deploy. Confirm the transaction in Metamask. Copy the deployed contract address and view it on Sepolia Etherscan. 
+5. Deposit: in the Value box enter 0.01 and choose Ether as the unit, then click the orange deposit button and confirm in Metamask. 
+6. Show balance: click showBalance. Expected output: 10000000000000000 (that is 0.01 ETH in wei). 
+7. Withdraw: enter 5000000000000000 (0.005 ETH in wei) in the withdraw box, click it and confirm. 
+8. Click showBalance again. Expected output: 5000000000000000. 
+9. Test failure cases: withdraw more than the balance (expect revert 'Insufficient balance') and deposit with value 0 (expect 'Deposit must be greater than 0'). 
+10. Check the contract creation and each function call on Etherscan (Transactions and Events/Logs tabs) and take screenshots.
+
+# Code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract BankAccount {
+
+    mapping(address => uint256) private balances;
+
+    function deposit() public payable {
+        require(msg.value > 0, "Enter valid amount");
+
+        balances[msg.sender] += msg.value;
+    }
+
+    function withdraw(uint256 amount) public {
+    require(amount > 0, "Invalid amount");
+
+    require(
+        balances[msg.sender] >= amount,
+        "Insufficient balance"
+    );
+
+    balances[msg.sender] -= amount;
+
+    (bool success, ) = payable(msg.sender).call{value: amount}("");
+
+    require(success, "Transfer failed");
+}
+
+    function showBalance() public view returns (uint256) {
+        return balances[msg.sender];
+    }
+}
+
