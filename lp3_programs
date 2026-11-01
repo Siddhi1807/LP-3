@@ -304,3 +304,1108 @@ else:
 
     print("\nMaximum value in Knapsack:", maximum_value)
 
+
+# ============================================================
+# ML-1: BANK CUSTOMER CHURN PREDICTION USING ANN
+# ============================================================
+# Cell-1
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import tensorflow as tf
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+
+print("All libraries imported successfully!")
+
+# Cell-2
+
+df = pd.read_csv("Churn_Modelling.csv")
+
+print("Dataset loaded successfully!")
+print("Dataset Shape:", df.shape)
+
+df.head()
+
+# Cell 3 – Explore dataset
+
+print("Dataset Information:")
+df.info()
+
+print("\nMissing Values:")
+print(df.isnull().sum())
+
+print("\nChurn Distribution:")
+print(df["Exited"].value_counts())
+
+sns.countplot(x="Exited", data=df)
+plt.title("Bank Customer Churn Distribution")
+plt.xlabel("Exited (0 = Stayed, 1 = Left)")
+plt.ylabel("Number of Customers")
+plt.show()
+
+# Cell 4 – Data preprocessing
+
+# Remove unnecessary columns
+df = df.drop(columns=["RowNumber", "CustomerId", "Surname"])
+
+# Separate features and target
+X = df.drop("Exited", axis=1)
+y = df["Exited"]
+
+# Convert categorical data into numerical data
+X = pd.get_dummies(
+    X,
+    columns=["Geography", "Gender"],
+    drop_first=True,
+    dtype=int
+)
+
+print("Processed Dataset:")
+display(X.head())
+
+print("Feature Shape:", X.shape)
+
+# Cell 5 – Split dataset
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y
+)
+
+print("Training Data Shape:", X_train.shape)
+print("Testing Data Shape:", X_test.shape)
+
+# Cell 6 – Feature scaling
+
+scaler = StandardScaler()
+
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+print("Feature scaling completed!")
+
+#Cell 7 – Build ANN model
+
+model = Sequential()
+
+# Input layer and first hidden layer
+model.add(Dense(16, input_shape=(X_train.shape[1],), activation="relu"))
+
+# Second hidden layer
+model.add(Dense(8, activation="relu"))
+
+# Output layer
+model.add(Dense(1, activation="sigmoid"))
+
+# Compile the model
+model.compile(
+    optimizer="adam",
+    loss="binary_crossentropy",
+    metrics=["accuracy"]
+)
+
+model.summary()
+
+# Cell 8 – Train ANN model
+
+history = model.fit(
+    X_train,
+    y_train,
+    epochs=50,
+    batch_size=32,
+    validation_split=0.2,
+    verbose=1
+)
+
+print("Model training completed!")
+
+# Cell 9 – Evaluate model
+
+loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
+
+print("Test Loss:", loss)
+print("Test Accuracy:", accuracy * 100, "%")
+
+# Cell 10 – Make predictions
+
+y_pred_prob = model.predict(X_test)
+
+# Convert probabilities into 0 or 1
+y_pred = (y_pred_prob > 0.5).astype(int).ravel()
+
+print("Predicted Values:")
+print(y_pred[:10])
+
+print("\nActual Values:")
+print(y_test.iloc[:10].values)
+
+# Cell 11 – Calculate accuracy
+
+accuracy = accuracy_score(y_test, y_pred)
+
+print("Final Model Accuracy:", accuracy * 100, "%")
+
+# Cell 12 – Confusion matrix
+
+cm = confusion_matrix(y_test, y_pred)
+
+plt.figure(figsize=(6, 4))
+
+sns.heatmap(
+    cm,
+    annot=True,
+    fmt="d",
+    cmap="Blues",
+    xticklabels=["Stayed", "Exited"],
+    yticklabels=["Stayed", "Exited"]
+)
+
+plt.title("Confusion Matrix")
+plt.xlabel("Predicted Values")
+plt.ylabel("Actual Values")
+plt.show()
+
+# Cell 13 – Classification report
+
+print("Classification Report:")
+
+print(classification_report(
+    y_test,
+    y_pred,
+    target_names=["Stayed", "Exited"]
+))
+
+# Cell 14 – Training and validation accuracy graph
+
+plt.figure(figsize=(7, 4))
+
+plt.plot(history.history["accuracy"], label="Training Accuracy")
+plt.plot(history.history["val_accuracy"], label="Validation Accuracy")
+
+plt.title("ANN Model Accuracy")
+plt.xlabel("Epochs")
+plt.ylabel("Accuracy")
+plt.legend()
+plt.show()
+
+# Cell 15 – Training and validation loss graph
+
+plt.figure(figsize=(7, 4))
+
+plt.plot(history.history["loss"], label="Training Loss")
+plt.plot(history.history["val_loss"], label="Validation Loss")
+
+plt.title("ANN Model Loss")
+plt.xlabel("Epochs")
+plt.ylabel("Loss")
+plt.legend()
+plt.show()
+
+# Cell 16 – Final result
+
+print("====================================")
+print("BANK CUSTOMER CHURN PREDICTION")
+print("====================================")
+print("Model: Artificial Neural Network")
+print("Optimizer: Adam")
+print("Loss Function: Binary Crossentropy")
+print("Test Accuracy:", accuracy * 100, "%")
+print("====================================")
+
+print("Practical executed successfully!")
+
+# ============================================================
+# ML-2: Email Spam Classification Using KNN and SVM
+# ============================================================
+
+# Cell 1 – Import libraries
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    classification_report
+)
+
+print("All libraries imported successfully!")
+
+# Cell 2 – Load dataset
+
+# Load the dataset
+df = pd.read_csv("spam.csv", encoding="latin-1")
+
+print("Dataset loaded successfully!")
+
+print("\nDataset Shape:")
+print(df.shape)
+
+print("\nFirst five records:")
+display(df.head())
+
+# Cell 3 – Data cleaning
+
+# Keep only the required columns
+df = df.iloc[:, :2]
+
+# Rename columns
+df.columns = ["Category", "Message"]
+
+# Remove missing values
+df = df.dropna()
+
+# Remove duplicate messages
+df = df.drop_duplicates()
+
+print("Cleaned Dataset Shape:", df.shape)
+
+print("\nCategory Distribution:")
+print(df["Category"].value_counts())
+
+display(df.head())
+
+# Cell 4– Visualize spam distribution
+
+plt.figure(figsize=(6, 4))
+
+sns.countplot(
+    x="Category",
+    data=df
+)
+
+plt.title("Spam and Ham Message Distribution")
+plt.xlabel("Message Category")
+plt.ylabel("Number of Messages")
+
+plt.show()
+
+# Cell 5 – Convert labels into numerical values
+
+# Convert ham to 0 and spam to 1
+df["Category"] = df["Category"].map({
+    "ham": 0,
+    "spam": 1
+})
+
+print("Label conversion completed!")
+
+print(df["Category"].value_counts())
+
+# Cell 6 – Separate input and output features
+
+# Input feature
+X = df["Message"]
+
+# Target variable
+y = df["Category"]
+
+print("Input Features:")
+print(X.head())
+
+print("\nTarget Values:")
+print(y.head())
+
+# Cell 7 – Split the dataset
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y
+)
+
+print("Training Samples:", len(X_train))
+print("Testing Samples:", len(X_test))
+
+# Cell 8 – Convert text into numerical features using TF-IDF
+
+tfidf = TfidfVectorizer(
+    stop_words="english",
+    max_features=3000
+)
+
+X_train_tfidf = tfidf.fit_transform(X_train)
+
+X_test_tfidf = tfidf.transform(X_test)
+
+print("Text vectorization completed!")
+
+print("Training Matrix Shape:", X_train_tfidf.shape)
+print("Testing Matrix Shape:", X_test_tfidf.shape)
+
+# Cell 9 – Implement KNN classifier
+
+# Create KNN model
+knn_model = KNeighborsClassifier(n_neighbors=5)
+
+# Train the model
+knn_model.fit(X_train_tfidf, y_train)
+
+# Predict results
+knn_pred = knn_model.predict(X_test_tfidf)
+
+# Calculate accuracy
+knn_accuracy = accuracy_score(y_test, knn_pred)
+
+print("KNN Model Training Completed!")
+print("KNN Accuracy:", knn_accuracy * 100, "%")
+
+# Cell 10 – Evaluate KNN model
+
+print("KNN Classification Report:")
+
+print(
+    classification_report(
+        y_test,
+        knn_pred,
+        target_names=["Ham", "Spam"]
+    )
+)
+
+# Confusion matrix
+knn_cm = confusion_matrix(y_test, knn_pred)
+
+plt.figure(figsize=(6, 4))
+
+sns.heatmap(
+    knn_cm,
+    annot=True,
+    fmt="d",
+    cmap="Blues",
+    xticklabels=["Ham", "Spam"],
+    yticklabels=["Ham", "Spam"]
+)
+
+plt.title("KNN Confusion Matrix")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+
+plt.show()
+
+# print("KNN Classification Report:")print(    classification_report(        y_test,        knn_pred,        target_names=["Ham", "Spam"]    ))# Confusion matrixknn_cm = confusion_matrix(y_test, knn_pred)plt.figure(figsize=(6, 4))sns.heatmap(    knn_cm,    annot=True,    fmt="d",    cmap="Blues",    xticklabels=["Ham", "Spam"],    yticklabels=["Ham", "Spam"])plt.title("KNN Confusion Matrix")plt.xlabel("Predicted")plt.ylabel("Actual")plt.show()
+
+
+
+Cell 11 – Implement SVM classifier
+
+# Create SVM model
+svm_model = SVC(kernel="linear")
+
+# Train the model
+svm_model.fit(X_train_tfidf, y_train)
+
+# Predict results
+svm_pred = svm_model.predict(X_test_tfidf)
+
+# Calculate accuracy
+svm_accuracy = accuracy_score(y_test, svm_pred)
+
+print("SVM Model Training Completed!")
+print("SVM Accuracy:", svm_accuracy * 100, "%")
+
+# Cell 12 – Evaluate SVM model
+
+print("SVM Classification Report:")
+
+print(
+    classification_report(
+        y_test,
+        svm_pred,
+        target_names=["Ham", "Spam"]
+    )
+)
+
+# Confusion matrix
+svm_cm = confusion_matrix(y_test, svm_pred)
+
+plt.figure(figsize=(6, 4))
+
+sns.heatmap(
+    svm_cm,
+    annot=True,
+    fmt="d",
+    cmap="Greens",
+    xticklabels=["Ham", "Spam"],
+    yticklabels=["Ham", "Spam"]
+)
+
+plt.title("SVM Confusion Matrix")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+
+plt.show()
+
+# Cell 13 – Compare KNN and SVM accuracy
+
+comparison = pd.DataFrame({
+    "Algorithm": ["KNN", "SVM"],
+    "Accuracy": [
+        knn_accuracy * 100,
+        svm_accuracy * 100
+    ]
+})
+
+print("Model Accuracy Comparison:")
+display(comparison)
+
+plt.figure(figsize=(7, 4))
+
+sns.barplot(
+    x="Algorithm",
+    y="Accuracy",
+    data=comparison
+)
+
+plt.title("KNN vs SVM Accuracy Comparison")
+plt.xlabel("Algorithm")
+plt.ylabel("Accuracy (%)")
+plt.ylim(0, 100)
+
+plt.show()
+
+# Cell 14 – Test with a new message
+
+# Enter a new message
+new_message = ["Congratulations! You have won a free prize. Call now!"]
+
+# Convert message into TF-IDF features
+new_message_tfidf = tfidf.transform(new_message)
+
+# Predict using KNN
+knn_result = knn_model.predict(new_message_tfidf)
+
+# Predict using SVM
+svm_result = svm_model.predict(new_message_tfidf)
+
+print("New Message:", new_message[0])
+
+print("\nKNN Prediction:",
+      "Spam" if knn_result[0] == 1 else "Not Spam")
+
+print("SVM Prediction:",
+      "Spam" if svm_result[0] == 1 else "Not Spam")
+
+# Cell 15 – Final result
+
+print("======================================")
+print("EMAIL SPAM CLASSIFICATION")
+print("======================================")
+
+print("KNN Accuracy:", knn_accuracy * 100, "%")
+print("SVM Accuracy:", svm_accuracy * 100, "%")
+
+if knn_accuracy > svm_accuracy:
+    print("Better Performing Model: KNN")
+
+elif svm_accuracy > knn_accuracy:
+    print("Better Performing Model: SVM")
+
+else:
+    print("Both models have equal accuracy.")
+
+print("======================================")
+print("Practical executed successfully!")
+
+# ============================================================
+# ML-3: Diabetes Prediction Using K-Nearest Neighbors (KNN)
+# ============================================================
+
+# Cell 1 – Import libraries
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    classification_report
+)
+
+print("All libraries imported successfully!")
+
+# Cell 2 – Load the dataset
+# Load diabetes dataset
+df = pd.read_csv("diabetes.csv")
+
+print("Dataset loaded successfully!")
+
+print("\nDataset Shape:")
+print(df.shape)
+
+print("\nFirst five records:")
+display(df.head())
+
+# Cell 3 – Explore the dataset
+print("Dataset Information:")
+df.info()
+
+print("\nMissing Values:")
+print(df.isnull().sum())
+
+print("\nStatistical Description:")
+display(df.describe())
+
+print("\nDiabetes Outcome Distribution:")
+print(df["Outcome"].value_counts())
+
+# Cell 4 – Visualize diabetes distribution
+plt.figure(figsize=(6, 4))
+
+sns.countplot(x="Outcome", data=df)
+
+plt.title("Diabetes Outcome Distribution")
+plt.xlabel("Outcome (0 = Non-Diabetic, 1 = Diabetic)")
+plt.ylabel("Number of People")
+
+plt.show()
+
+#Cell 5 – Data preprocessing
+# Columns where zero is treated as a missing measurement
+columns_to_replace = [
+    "Glucose",
+    "BloodPressure",
+    "SkinThickness",
+    "Insulin",
+    "BMI"
+]
+
+# Replace zero values with NaN
+df[columns_to_replace] = df[columns_to_replace].replace(0, np.nan)
+
+# Fill missing values with column medians
+for col in columns_to_replace:
+    df[col] = df[col].fillna(df[col].median())
+
+print("Missing values handled successfully!")
+
+print("\nMissing Values After Preprocessing:")
+print(df.isnull().sum())
+
+# Cell 6 – Separate input and output features
+# Independent variables
+X = df.drop("Outcome", axis=1)
+
+# Dependent variable
+y = df["Outcome"]
+
+print("Input Features:")
+display(X.head())
+
+print("\nTarget Variable:")
+print(y.head())
+
+# Cell 7 – Split dataset into training and testing data
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y
+)
+
+print("Training Data Shape:", X_train.shape)
+print("Testing Data Shape:", X_test.shape)
+
+# Cell 8 – Feature scaling
+scaler = StandardScaler()
+
+X_train = scaler.fit_transform(X_train)
+
+X_test = scaler.transform(X_test)
+
+print("Feature scaling completed!")
+
+# Cell 9 – Implement KNN algorithm
+# Create KNN classifier
+knn = KNeighborsClassifier(n_neighbors=5)
+
+# Train the model
+knn.fit(X_train, y_train)
+
+print("KNN model trained successfully!")
+
+# Cell 10 – Make predictions
+# Predict test data
+y_pred = knn.predict(X_test)
+
+print("Predicted Values:")
+print(y_pred[:20])
+
+print("\nActual Values:")
+print(y_test.iloc[:20].values)
+
+# Cell 11 – Calculate accuracy
+accuracy = accuracy_score(y_test, y_pred)
+
+print("KNN Model Accuracy:", accuracy * 100, "%")
+
+# Cell 12 – Confusion matrix
+cm = confusion_matrix(y_test, y_pred)
+
+plt.figure(figsize=(6, 4))
+
+sns.heatmap(
+    cm,
+    annot=True,
+    fmt="d",
+    cmap="Blues",
+    xticklabels=["Non-Diabetic", "Diabetic"],
+    yticklabels=["Non-Diabetic", "Diabetic"]
+)
+
+plt.title("KNN Confusion Matrix")
+plt.xlabel("Predicted Values")
+plt.ylabel("Actual Values")
+
+plt.show()
+
+# Cell 13 – Classification report
+print("Classification Report:")
+
+print(
+    classification_report(
+        y_test,
+        y_pred,
+        target_names=["Non-Diabetic", "Diabetic"]
+    )
+)
+
+# Cell 14 – Find the best value of K
+k_values = range(1, 16)
+
+accuracy_scores = []
+
+for k in k_values:
+
+    model = KNeighborsClassifier(n_neighbors=k)
+
+    model.fit(X_train, y_train)
+
+    predictions = model.predict(X_test)
+
+    score = accuracy_score(y_test, predictions)
+
+    accuracy_scores.append(score)
+
+# Find best K
+best_k = list(k_values)[np.argmax(accuracy_scores)]
+
+print("Best K Value:", best_k)
+print("Best Accuracy:", max(accuracy_scores) * 100, "%")
+
+# Cell 15 – Plot accuracy for different K values
+plt.figure(figsize=(8, 5))
+
+plt.plot(
+    k_values,
+    accuracy_scores,
+    marker="o"
+)
+
+plt.title("KNN Accuracy for Different K Values")
+plt.xlabel("Number of Neighbors (K)")
+plt.ylabel("Accuracy")
+plt.xticks(list(k_values))
+plt.grid(True)
+
+plt.show()
+
+# Cell 16 – Predict using a new sample
+# Sample patient data:
+# Pregnancies, Glucose, BloodPressure, SkinThickness,
+# Insulin, BMI, DiabetesPedigreeFunction, Age
+
+new_patient = [[
+    2,
+    120,
+    70,
+    25,
+    80,
+    28.5,
+    0.5,
+    30
+]]
+
+# Apply the same scaling
+new_patient_scaled = scaler.transform(new_patient)
+
+# Predict diabetes outcome
+prediction = knn.predict(new_patient_scaled)
+
+if prediction[0] == 1:
+    print("Prediction: Diabetic")
+else:
+    print("Prediction: Non-Diabetic")
+
+# Cell 17 – Final result
+print("====================================")
+print("DIABETES PREDICTION USING KNN")
+print("====================================")
+
+print("Algorithm: K-Nearest Neighbors")
+print("Number of Neighbors (K): 5")
+print("Model Accuracy:", accuracy * 100, "%")
+print("Best K Value:", best_k)
+
+print("====================================")
+print("Practical executed successfully!")
+
+# ============================================================
+# ML-4: Sales Data Clustering Using K-Means and Elbow Method
+# ============================================================
+
+# Cell 1 – Import libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import silhouette_score
+
+print("All libraries imported successfully!")
+
+# Cell 2 – Load dataset
+# Load customer dataset
+df = pd.read_csv("Mall_Customers.csv")
+
+print("Dataset loaded successfully!")
+
+print("\nDataset Shape:")
+print(df.shape)
+
+print("\nFirst five records:")
+display(df.head())
+
+# Cell 3 – Explore dataset
+print("Dataset Information:")
+df.info()
+
+print("\nMissing Values:")
+print(df.isnull().sum())
+
+print("\nStatistical Description:")
+display(df.describe())
+
+# Cell 4 – Visualize customer data
+plt.figure(figsize=(7, 5))
+
+sns.scatterplot(
+    data=df,
+    x="Annual Income (k$)",
+    y="Spending Score (1-100)",
+    hue="Gender"
+)
+
+plt.title("Customer Income vs Spending Score")
+plt.xlabel("Annual Income (k$)")
+plt.ylabel("Spending Score")
+
+plt.show()
+
+# Cell 5 – Select features for clustering
+# Select relevant features
+X = df[[
+    "Annual Income (k$)",
+    "Spending Score (1-100)"
+]]
+
+print("Selected Features:")
+display(X.head())
+
+print("\nFeature Shape:", X.shape)
+
+# Cell 6 – Feature scaling
+scaler = StandardScaler()
+
+X_scaled = scaler.fit_transform(X)
+
+print("Feature scaling completed!")
+
+# Cell 7 – Find optimal clusters using the Elbow Method
+wcss = []
+
+for i in range(1, 11):
+
+    kmeans = KMeans(
+        n_clusters=i,
+        init="k-means++",
+        random_state=42,
+        n_init=10
+    )
+
+    kmeans.fit(X_scaled)
+
+    wcss.append(kmeans.inertia_)
+
+print("WCSS Values:")
+print(wcss)
+
+# Cell 8 – Plot the Elbow graph
+plt.figure(figsize=(8, 5))
+
+plt.plot(
+    range(1, 11),
+    wcss,
+    marker="o"
+)
+
+plt.title("Elbow Method")
+plt.xlabel("Number of Clusters (K)")
+plt.ylabel("WCSS")
+plt.xticks(range(1, 11))
+plt.grid(True)
+
+plt.show()
+
+# Cell 9 – Apply K-Means clustering
+# Create K-Means model with 5 clusters
+kmeans = KMeans(
+    n_clusters=5,
+    init="k-means++",
+    random_state=42,
+    n_init=10
+)
+
+# Train model and assign cluster labels
+clusters = kmeans.fit_predict(X_scaled)
+
+# Add cluster labels to original dataset
+df["Cluster"] = clusters
+
+print("K-Means clustering completed!")
+
+print("\nCluster Distribution:")
+print(df["Cluster"].value_counts().sort_index())
+
+display(df.head())
+
+# Cell 10 – Visualize the clusters
+plt.figure(figsize=(10, 6))
+
+sns.scatterplot(
+    x=X["Annual Income (k$)"],
+    y=X["Spending Score (1-100)"],
+    hue=df["Cluster"],
+    palette="viridis",
+    s=80
+)
+
+# Convert cluster centres back to original scale
+centers = scaler.inverse_transform(kmeans.cluster_centers_)
+
+plt.scatter(
+    centers[:, 0],
+    centers[:, 1],
+    marker="X",
+    s=250,
+    color="red",
+    label="Centroids"
+)
+
+plt.title("Customer Segmentation Using K-Means")
+plt.xlabel("Annual Income (k$)")
+plt.ylabel("Spending Score (1-100)")
+plt.legend()
+
+plt.show()
+
+# Cell 11 – Calculate silhouette score
+score = silhouette_score(X_scaled, clusters)
+
+print("Silhouette Score:", score)
+
+# Cell 12 – Display cluster-wise customer details
+print("Average Customer Characteristics by Cluster:")
+
+cluster_summary = df.groupby("Cluster")[
+    ["Annual Income (k$)", "Spending Score (1-100)"]
+].mean()
+
+display(cluster_summary)
+
+# Cell 13 – Final result
+print("======================================")
+print("SALES DATA CLUSTERING USING K-MEANS")
+print("======================================")
+
+print("Algorithm: K-Means Clustering")
+print("Number of Clusters:", kmeans.n_clusters)
+print("WCSS:", kmeans.inertia_)
+print("Silhouette Score:", score)
+
+print("======================================")
+print("Practical executed successfully!")
+
+# ========================================================================
+# ML-5: Implementation of Gradient Descent Algorithm to Minimize y=(x+3)^2
+# ========================================================================
+
+# Cell 1 – Import required libraries
+import numpy as np
+import matplotlib.pyplot as plt
+
+print("Libraries imported successfully!")
+
+# Cell 2 – Define the function and its derivative
+# Define the objective function
+def function(x):
+    return (x + 3) ** 2
+
+# Define the derivative of the function
+def derivative(x):
+    return 2 * (x + 3)
+
+print("Function: f(x) = (x + 3)^2")
+print("Derivative: f'(x) = 2(x + 3)")
+
+# Cell 3 – Initialize parameters
+# Initial value
+x = 5
+
+# Learning rate
+learning_rate = 0.1
+
+# Number of iterations
+epochs = 50
+
+# Store values for visualization
+x_history = []
+y_history = []
+
+print("Initial x:", x)
+print("Learning rate:", learning_rate)
+print("Number of iterations:", epochs)
+
+# Cell 4 – Implement the Gradient Descent Algorithm
+# Gradient Descent Algorithm
+
+for i in range(epochs):
+
+    # Calculate gradient
+    grad = derivative(x)
+
+    # Update x
+    x = x - learning_rate * grad
+
+    # Calculate function value
+    y = function(x)
+
+    # Store values
+    x_history.append(x)
+    y_history.append(y)
+
+    print("Iteration:", i + 1,
+          "| x =", round(x, 6),
+          "| y =", round(y, 8))
+
+# Cell 5 – Display the final minimum value
+print("Gradient Descent Completed!")
+
+print("Final value of x:", x)
+print("Minimum value of y:", function(x))
+
+print("\nTheoretical Minimum:")
+print("x = -3")
+print("y = 0")
+
+# Cell 6 – Plot the objective function
+# Generate x values
+x_values = np.linspace(-8, 5, 100)
+
+# Calculate corresponding y values
+y_values = function(x_values)
+
+# Plot the function
+plt.figure(figsize=(8, 5))
+
+plt.plot(x_values, y_values, label="y = (x + 3)^2")
+
+# Mark the minimum point
+plt.scatter(-3, 0, color="red", s=100, label="Minimum Point (-3, 0)")
+
+plt.xlabel("x")
+plt.ylabel("y")
+plt.title("Objective Function: y = (x + 3)^2")
+
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# Cell 7 – Visualize the Gradient Descent process
+plt.figure(figsize=(8, 5))
+
+# Plot objective function
+plt.plot(x_values, y_values, label="Objective Function")
+
+# Plot gradient descent steps
+plt.scatter(x_history, y_history,
+            color="red", label="Gradient Descent Steps")
+
+# Mark minimum
+plt.scatter(-3, 0, color="green",
+            s=100, label="Minimum Point")
+
+plt.xlabel("x")
+plt.ylabel("y")
+plt.title("Gradient Descent Optimization")
+
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# Cell 8 – Plot cost reduction over iterations
+plt.figure(figsize=(8, 5))
+
+plt.plot(range(1, epochs + 1), y_history, marker="o")
+
+plt.xlabel("Number of Iterations")
+plt.ylabel("Function Value (y)")
+
+plt.title("Gradient Descent: Cost Reduction")
+
+plt.grid(True)
+plt.show()
+
+# Cell 9 – Display the final result in a formatted way
+print("-----------------------------------")
+print("       GRADIENT DESCENT RESULT")
+print("-----------------------------------")
+
+print("Objective Function: y = (x + 3)^2")
+print("Learning Rate:", learning_rate)
+print("Total Iterations:", epochs)
+
+print("Initial x: 5")
+print("Final x:", round(x, 6))
+print("Minimum y:", round(function(x), 8))
+
+print("-----------------------------------")
+
